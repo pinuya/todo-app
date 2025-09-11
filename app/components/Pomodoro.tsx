@@ -1,7 +1,10 @@
+import { requestNotificationPermission, notifyUser } from "../utils/notifications";
 import { useState, useEffect, useRef } from "react";
 
+const DEFAULT_POMODORO_TIME = 25 * 60;
+
 export default function PomodoroTimer() {
-  const [timeLeft, setTimeLeft] = useState<number>(25 * 60);
+  const [timeLeft, setTimeLeft] = useState<number>(DEFAULT_POMODORO_TIME);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -13,6 +16,8 @@ export default function PomodoroTimer() {
       .padStart(2, "0")}`;
   };
 
+  const getMinutes = (seconds: number) => Math.floor(seconds / 60);
+
   const toggleTimer = (): void => {
     if (isRunning) {
       if (intervalRef.current !== null) {
@@ -21,6 +26,7 @@ export default function PomodoroTimer() {
       }
       setIsRunning(false);
     } else {
+      requestNotificationPermission();
       setIsRunning(true);
     }
   };
@@ -30,7 +36,7 @@ export default function PomodoroTimer() {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    setTimeLeft(25 * 60);
+    setTimeLeft(DEFAULT_POMODORO_TIME);
     setIsRunning(false);
   };
 
@@ -40,6 +46,7 @@ export default function PomodoroTimer() {
         setTimeLeft((prevTime: number) => {
           if (prevTime <= 1) {
             setIsRunning(false);
+            notifyUser("🎉 Pomodoro Concluído!");
             return 0;
           }
           return prevTime - 1;
@@ -60,7 +67,7 @@ export default function PomodoroTimer() {
     };
   }, [isRunning, timeLeft]);
 
-  const progressPercentage: number = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
+  const progressPercentage: number = ((DEFAULT_POMODORO_TIME - timeLeft) / (DEFAULT_POMODORO_TIME)) * 100;
 
   return (
     <div className="flex items-center justify-center">
@@ -135,7 +142,7 @@ export default function PomodoroTimer() {
         </div>
 
         <div className="text-gray-500 text-sm">
-          <p className="mb-1">Técnica Pomodoro: 25 minutos de foco</p>
+          <p className="mb-1">Técnica Pomodoro: {getMinutes(DEFAULT_POMODORO_TIME)} minutos de foco</p>
           <p>Mantenha-se concentrado em uma única tarefa!</p>
         </div>
       </div>
